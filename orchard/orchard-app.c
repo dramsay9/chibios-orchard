@@ -81,8 +81,8 @@ mutex_t friend_mutex;
 
 void friend_cleanup(void);
 
-#define MAIN_MENU_MASK  ((1 << 11) | (1 << 0))
-#define MAIN_MENU_VALUE ((1 << 11) | (1 << 0))
+#define MAIN_MENU_MASK  ((1 << 11))
+#define MAIN_MENU_VALUE ((1 << 11))
 
 static usbStat lastUSBstatus = usbStatUnknown;
 
@@ -100,12 +100,12 @@ static void handle_ping_timeout(eventid_t id) {
   (void) id;
   const struct genes *family;
   family = (const struct genes *) storageGetData(GENE_BLOCK);
-
+ /*
   radioAcquire(radioDriver);
   radioSend(radioDriver, RADIO_BROADCAST_ADDRESS, radio_prot_ping,
 	    strlen(family->name) + 1, family->name);
   radioRelease(radioDriver);
-    
+ */   
   // cleanup every other ping we send, to make sure friends that are
   // nearby build up credit over time to max credits
 
@@ -331,17 +331,16 @@ static void handle_chargecheck_timeout(eventid_t id) {
 }
 
 static int captouch_to_key(uint8_t code) {
-  if (code == 11)
-    return keyLeft;
-  if (code == 0)
-    return keyRight;
-#if KEY_LAYOUT == LAYOUT_BM
-  if (code == 5)
-    return keySelect;
-#elif KEY_LAYOUT == LAYOUT_BC1
+ // if (code == 12)
+ //   return keyLeft;
+ // if (code == 2)
+ //   return keyRight;
   if (code == 2)
+    return keyCCW;
+  if (code == 0)
+    return keyCW;
+  if (code == 9)
     return keySelect;
-#endif
   return code;
 }
 
@@ -661,9 +660,9 @@ static void key_event(eventid_t id) {
     uint8_t code = captouch_to_key(i);
 
     /* Code is a wheel event */
-    if (code < 0x80)
+ /*   if (code != 0x80)
       continue;
-
+ */
     if ((val & (1 << i)) && !(instance.keymask & (1 << i))) {
       evt.type = keyEvent;
       evt.key.code = code;
@@ -690,6 +689,7 @@ static void key_event(eventid_t id) {
   captouch_collected_state = 0;
 }
 
+/*
 // handle jogdial events (in parallel to key events)
 static void dial_event(eventid_t id) {
   (void)id;
@@ -699,8 +699,9 @@ static void dial_event(eventid_t id) {
 
   if (!instance.app->event)
     return;
-
+*/
   /* No key changed */
+/*  
   if (instance.keymask == val)
     return;
 
@@ -726,6 +727,7 @@ static void dial_event(eventid_t id) {
   }
   
 }
+*/
 
 static void terminate(eventid_t id) {
 
@@ -830,7 +832,7 @@ static THD_FUNCTION(orchard_app_thread, arg) {
   evtTableHook(orchard_app_events, radio_app, radio_app_event);
   evtTableHook(orchard_app_events, ui_completed, ui_complete_cleanup);
   evtTableHook(orchard_app_events, captouch_changed, key_event_timer);
-  evtTableHook(orchard_app_events, captouch_changed, dial_event);
+  //evtTableHook(orchard_app_events, captouch_changed, dial_event);
   evtTableHook(orchard_app_events, keycollect_timeout, key_event);
   evtTableHook(orchard_app_events, orchard_app_terminate, terminate);
   evtTableHook(orchard_app_events, timer_expired, timer_event);
@@ -889,7 +891,7 @@ static THD_FUNCTION(orchard_app_thread, arg) {
   evtTableUnhook(orchard_app_events, timer_expired, timer_event);
   evtTableUnhook(orchard_app_events, orchard_app_terminate, terminate);
   evtTableUnhook(orchard_app_events, keycollect_timeout, key_event);
-  evtTableUnhook(orchard_app_events, captouch_changed, dial_event);
+  //evtTableUnhook(orchard_app_events, captouch_changed, dial_event);
   evtTableUnhook(orchard_app_events, captouch_changed, key_event_timer);
   evtTableUnhook(orchard_app_events, ui_completed, ui_complete_cleanup);
   evtTableUnhook(orchard_app_events, radio_app, radio_app_event);

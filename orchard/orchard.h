@@ -21,6 +21,8 @@ extern void *stream;
 #define ggAddr                        0x55
 #define touchAddr                     0x5a
 #define chargerAddr                   0x6b
+#define compassAddr                   0x1e
+#define audioAddr                     0x3f
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
